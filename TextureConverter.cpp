@@ -74,9 +74,24 @@ void TextureConverter::SeparateFilePath(const std::wstring& filePath) {
 
 void TextureConverter::SaveDDSTextureToFile() {
 
-	metaData_.format = MakeSRGB(metaData_.format);
-
 	HRESULT hr;
+
+	ScratchImage mipChain;
+	hr = GenerateMipMaps(scratchImage_.GetImages(), scratchImage_.GetImageCount(), scratchImage_.GetMetadata(), TEX_FILTER_DEFAULT, 0, mipChain);
+	if (SUCCEEDED(hr)) {
+		scratchImage_ = std::move(mipChain);
+		metaData_ = scratchImage_.GetMetadata();
+	}
+
+	ScratchImage converted;
+	hr = Compress(scratchImage_.GetImages(), scratchImage_.GetImageCount(), metaData_, DXGI_FORMAT_BC7_UNORM_SRGB, TEX_COMPRESS_BC7_QUICK | TEX_COMPRESS_SRGB_OUT | TEX_COMPRESS_PARALLEL, 1.0f, converted);
+	if (SUCCEEDED(hr)) {
+		scratchImage_ = std::move(converted);
+		metaData_ = scratchImage_.GetMetadata();
+	}
+
+
+	metaData_.format = MakeSRGB(metaData_.format);
 
 	std::wstring filePath = directoryPath_ + fileName_ + L".dds";
 
