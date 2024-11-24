@@ -1,6 +1,6 @@
-$files = Get-Item *.jpg
+$files = Get-Item *.jpg,*.png
 
 foreach($f in $files){
-    Start-Process -FilePath TextureConverter.exe -ArgumentList $f -Wait
+    Start-Process -FilePath TextureConverter.exe -ArgumentList "$f -ml 3" -Wait
 }
 pause
