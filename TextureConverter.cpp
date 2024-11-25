@@ -104,13 +104,42 @@ void TextureConverter::SaveDDSTextureToFile(int numOptions, char* options[]) {
 	HRESULT hr;
 
 	size_t mipLevel = 0;
+	DXGI_FORMAT compressFormat = DXGI_FORMAT_BC7_UNORM_SRGB;
 
 	//ミップマップのレベル指定を検索
 	for (int index = 0; index < numOptions; index++) {
 		if (std::string(options[index]) == "-ml") {
 			//ミップレベル指定
 			mipLevel = std::stoi(options[index + 1]);
-			break;
+			continue;
+		}
+		if (std::string(options[index]) == "-bc") {
+			size_t compressNum = std::stoi(options[index + 1]);
+
+			switch (compressNum) {
+				case 1:
+					compressFormat = DXGI_FORMAT_BC1_UNORM_SRGB;
+					break;
+				case 2:
+					compressFormat = DXGI_FORMAT_BC2_UNORM_SRGB;
+					break;
+				case 3:
+					compressFormat = DXGI_FORMAT_BC3_UNORM_SRGB;
+					break;
+				case 4:
+					compressFormat = DXGI_FORMAT_BC4_UNORM;
+					break;
+				case 5:
+					compressFormat = DXGI_FORMAT_BC5_UNORM;
+					break;
+				case 6:
+					compressFormat = DXGI_FORMAT_BC6H_UF16;
+					break;
+				case 7:
+					compressFormat = DXGI_FORMAT_BC7_UNORM_SRGB;
+					break;
+			}
+			continue;
 		}
 	}
 
@@ -125,7 +154,7 @@ void TextureConverter::SaveDDSTextureToFile(int numOptions, char* options[]) {
 
 	//圧縮形式に変換
 	ScratchImage converted;
-	hr = Compress(scratchImage_.GetImages(), scratchImage_.GetImageCount(), metaData_, DXGI_FORMAT_BC7_UNORM_SRGB, TEX_COMPRESS_BC7_QUICK | TEX_COMPRESS_SRGB_OUT | TEX_COMPRESS_PARALLEL, 1.0f, converted);
+	hr = Compress(scratchImage_.GetImages(), scratchImage_.GetImageCount(), metaData_, compressFormat, TEX_COMPRESS_BC7_QUICK | TEX_COMPRESS_SRGB_OUT | TEX_COMPRESS_PARALLEL, 1.0f, converted);
 	if (SUCCEEDED(hr)) {
 		scratchImage_ = std::move(converted);
 		metaData_ = scratchImage_.GetMetadata();
